@@ -1,0 +1,41 @@
+/* Floating Resume Download Button */
+.resume-download-btn {
+  position: fixed;
+  bottom: 100px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(136deg, #48c6ef 0%, #6f86d6 100%);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 99;
+  box-shadow: 0 4px 12px rgba(72, 198, 239, 0.4);
+  transition: all 0.3s ease;
+  font-size: 24px;
+  text-decoration: none;
+}
+
+.resume-download-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(72, 198, 239, 0.6);
+  color: white;
+}
+
+.resume-download-btn:active {
+  transform: scale(0.95);
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .resume-download-btn {
+    bottom: 90px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+  }
+}
