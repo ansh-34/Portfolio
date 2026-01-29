@@ -7,34 +7,40 @@ const useFullPageScroll = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isScrollingRef = useRef(false);
-  const touchStartRef = useRef(null);
-  const lastTouchEndRef = useRef(null);
+  const touchStartYRef = useRef(null);
+  const lastScrollYRef = useRef(0);
 
   useEffect(() => {
-    const handleNavigation = (scrollDirection) => {
+    const checkAndNavigate = () => {
       if (isScrollingRef.current) return;
 
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = document.documentElement.clientHeight;
-      
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 100;
-      const isAtTop = scrollTop <= 100;
+      const clientHeight = window.innerHeight;
       const currentIndex = routes.indexOf(location.pathname);
+      
+      // More generous thresholds for mobile
+      const threshold = 150;
+      const isAtBottom = (scrollTop + clientHeight) >= (scrollHeight - threshold);
+      const isAtTop = scrollTop <= threshold;
+      const scrollDirection = scrollTop > lastScrollYRef.current ? 'down' : 'up';
+      
+      lastScrollYRef.current = scrollTop;
 
-      // Navigate to next section when scrolling down at bottom
+      // Navigate to next section when at bottom scrolling down
       if (isAtBottom && scrollDirection === 'down' && currentIndex < routes.length - 1) {
         isScrollingRef.current = true;
         navigate(routes[currentIndex + 1]);
         
         setTimeout(() => {
-          window.scrollTo({ top: 0, behavior: 'auto' });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
           setTimeout(() => {
             isScrollingRef.current = false;
-          }, 1000);
-        }, 100);
+            lastScrollYRef.current = 0;
+          }, 1200);
+        }, 150);
       }
-      // Navigate to previous section when scrolling up at top
+      // Navigate to previous section when at top scrolling up
       else if (isAtTop && scrollDirection === 'up' && currentIndex > 0) {
         isScrollingRef.current = true;
         
@@ -42,63 +48,55 @@ const useFullPageScroll = () => {
           navigate(routes[currentIndex - 1]);
           setTimeout(() => {
             const newScrollHeight = document.documentElement.scrollHeight;
-            const newClientHeight = document.documentElement.clientHeight;
-            window.scrollTo({ top: newScrollHeight - newClientHeight, behavior: 'auto' });
+            const newClientHeight = window.innerHeight;
+            window.scrollTo({ top: newScrollHeight - newClientHeight - 50, behavior: 'smooth' });
             setTimeout(() => {
               isScrollingRef.current = false;
-            }, 1000);
-          }, 100);
-        }, 100);
+              lastScrollYRef.current = newScrollHeight - newClientHeight - 50;
+            }, 1200);
+          }, 150);
+        }, 150);
       }
     };
 
-    // Handle mouse wheel events (desktop)
-    const handleWheel = (e) => {
-      const scrollDirection = e.deltaY > 0 ? 'down' : 'up';
-      handleNavigation(scrollDirection);
+    // Desktop: wheel event
+    const handleWheel = () => {
+      checkAndNavigate();
     };
 
-    // Handle touch events (mobile) - using touchend for better reliability
+    // Mobile: touch events
     const handleTouchStart = (e) => {
-      touchStartRef.current = e.touches[0].clientY;
+      touchStartYRef.current = e.touches[0].clientY;
     };
 
-    const handleTouchEnd = (e) => {
-      if (!touchStartRef.current || isScrollingRef.current) return;
-      
-      const touchEnd = lastTouchEndRef.current || e.changedTouches[0].clientY;
-      const touchDiff = touchStartRef.current - touchEnd;
-      
-      // Check if swipe was significant (at least 30px)
-      if (Math.abs(touchDiff) > 30) {
-        const scrollDirection = touchDiff > 0 ? 'down' : 'up';
-        
-        // Small delay to ensure scroll position is accurate
-        setTimeout(() => {
-          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          const scrollHeight = document.documentElement.scrollHeight;
-          const clientHeight = document.documentElement.clientHeight;
-          const isAtBottom = scrollTop + clientHeight >= scrollHeight - 100;
-          const isAtTop = scrollTop <= 100;
-          
-          if ((isAtBottom && scrollDirection === 'down') || (isAtTop && scrollDirection === 'up')) {
-            handleNavigation(scrollDirection);
-          }
-        }, 50);
-      }
-      
-      touchStartRef.current = null;
-      lastTouchEndRef.current = touchEnd;
+    const handleTouchEnd = () => {
+      touchStartYRef.current = null;
+      // Check navigation after touch ends
+      setTimeout(() => {
+        checkAndNavigate();
+      }, 100);
+    };
+
+    // Also check on scroll end
+    let scrollTimeout;
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        checkAndNavigate();
+      }, 150);
     };
 
     window.addEventListener('wheel', handleWheel, { passive: true });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
     };
   }, [navigate, location.pathname]);
 };
