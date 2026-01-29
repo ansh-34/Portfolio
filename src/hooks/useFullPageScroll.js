@@ -1,13 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+const routes = ['/', '/about', '/project'];
+
 const useFullPageScroll = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isScrollingRef = useRef(false);
-  const scrollTimeoutRef = useRef(null);
-
-  const routes = ['/', '/about', '/project'];
 
   useEffect(() => {
     const handleWheel = (e) => {
@@ -59,9 +58,6 @@ const useFullPageScroll = () => {
 
     return () => {
       window.removeEventListener('wheel', handleWheel);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
     };
   }, [navigate, location.pathname]);
 };
