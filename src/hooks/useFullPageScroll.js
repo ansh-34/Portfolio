@@ -10,7 +10,6 @@ const useFullPageScroll = () => {
   const touchStartRef = useRef(0);
 
   useEffect(() => {
-    let lastScrollTop = 0;
     let ticking = false;
 
     const handleNavigation = (scrollDirection) => {
@@ -87,7 +86,6 @@ const useFullPageScroll = () => {
             }
           }
           
-          lastScrollTop = scrollTop;
           ticking = false;
         });
         ticking = true;
