@@ -104,11 +104,6 @@ const useFullPageScroll = () => {
       window.removeEventListener('touchmove', handleTouchMove);
     };
   }, [navigate, location.pathname]);
-
-    return () => {
-      window.removeEventListener('wheel', handleWheel);
-    };
-  }, [navigate, location.pathname]);
 };
 
 export default useFullPageScroll;
